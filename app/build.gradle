@@ -1,5 +1,6 @@
 apply plugin: 'com.android.application'
 apply plugin: 'android-apt'
+apply plugin: 'com.google.gms.google-services'
 
 android {
   compileSdkVersion 23
@@ -26,8 +27,8 @@ repositories {
 
 dependencies {
 
-  compile 'com.google.android.gms:play-services-gcm:8.4.0'
-  compile 'com.squareup.okhttp:okhttp:2.5.0'
+  compile 'com.google.android.gms:play-services-gcm:8.1.0'
+  compile 'com.squareup.okhttp3:okhttp:3.4.1'
   apt 'net.simonvt.schematic:schematic-compiler:0.6.3'
   compile 'net.simonvt.schematic:schematic:0.6.3'
   compile 'com.melnykov:floatingactionbutton:1.2.0'

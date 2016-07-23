@@ -8,9 +8,9 @@ import android.content.Loader;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.app.ActionBar;
 import android.os.Bundle;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
@@ -19,8 +19,14 @@ import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
+
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.google.android.gms.gcm.GcmNetworkManager;
+import com.google.android.gms.gcm.PeriodicTask;
+import com.google.android.gms.gcm.Task;
+import com.melnykov.fab.FloatingActionButton;
 import com.sam_chordas.android.stockhawk.R;
 import com.sam_chordas.android.stockhawk.data.QuoteColumns;
 import com.sam_chordas.android.stockhawk.data.QuoteProvider;
@@ -29,10 +35,6 @@ import com.sam_chordas.android.stockhawk.rest.RecyclerViewItemClickListener;
 import com.sam_chordas.android.stockhawk.rest.Utils;
 import com.sam_chordas.android.stockhawk.service.StockIntentService;
 import com.sam_chordas.android.stockhawk.service.StockTaskService;
-import com.google.android.gms.gcm.GcmNetworkManager;
-import com.google.android.gms.gcm.PeriodicTask;
-import com.google.android.gms.gcm.Task;
-import com.melnykov.fab.FloatingActionButton;
 import com.sam_chordas.android.stockhawk.touch_helper.SimpleItemTouchHelperCallback;
 
 public class MyStocksActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>{
@@ -51,7 +53,11 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
   private QuoteCursorAdapter mCursorAdapter;
   private Context mContext;
   private Cursor mCursor;
+  private TextView mEmptyView;
+    //private Handler mHandler;
   boolean isConnected;
+  public static final String ACTION_DATA_UPDATED =
+          "com.sam_chordas.android.stockhawk.ACTION_DATA_UPDATED";
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +73,16 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
     // The intent service is for executing immediate pulls from the Yahoo API
     // GCMTaskService can only schedule tasks, they cannot execute immediately
     mServiceIntent = new Intent(this, StockIntentService.class);
+      /*mHandler = new Handler(Looper.getMainLooper()) {
+              @Override
+              public void handleMessage(Message msg) {
+                  Log.v("DEBUG", "json string is " + msg.getData().getString("historical"));
+                  Intent intent = new Intent(getBaseContext(), MyDetailsActivity.class);
+                  Bundle args = new Bundle();
+                  args.putString("historical", msg.getData().getString("historical"));
+                  startActivity(intent, args);
+              }
+      };*/
     if (savedInstanceState == null){
       // Run the initialize task service so that some stocks appear upon an empty database
       mServiceIntent.putExtra("tag", "init");
@@ -76,9 +92,11 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
         networkToast();
       }
     }
-    RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+    final RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
     recyclerView.setLayoutManager(new LinearLayoutManager(this));
     getLoaderManager().initLoader(CURSOR_LOADER_ID, null, this);
+
+    mEmptyView = (TextView) findViewById(R.id.recyclerview_empty);
 
     mCursorAdapter = new QuoteCursorAdapter(this, null);
     recyclerView.addOnItemTouchListener(new RecyclerViewItemClickListener(this,
@@ -86,6 +104,20 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
               @Override public void onItemClick(View v, int position) {
                 //TODO:
                 // do something on item click
+                  mCursor.moveToPosition(position);
+                  String symbol = mCursor.getString(mCursor.getColumnIndex(QuoteColumns.SYMBOL));
+                  // Add the stock to DB
+                  mServiceIntent.putExtra("tag", "get");
+                  mServiceIntent.putExtra("symbol", symbol);
+                  //mServiceIntent.putExtra(StockIntentService.EXTRA_MESSENGER, new Messenger(mHandler));
+                  startService(mServiceIntent);
+                  // Let user know we are in the process of retrieving this stock's
+                  // specific details since this might take some time
+                  Toast toast =
+                          Toast.makeText(MyStocksActivity.this, "Retrieving details for " + symbol + "...",
+                                  Toast.LENGTH_LONG);
+                  toast.setGravity(Gravity.CENTER, Gravity.CENTER, 0);
+                  toast.show();
               }
             }));
     recyclerView.setAdapter(mCursorAdapter);
@@ -118,6 +150,13 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
                     mServiceIntent.putExtra("tag", "add");
                     mServiceIntent.putExtra("symbol", input.toString());
                     startService(mServiceIntent);
+                      // Let user know we are in the process of adding the stock
+                      // since this might take some time
+                      Toast toast =
+                              Toast.makeText(MyStocksActivity.this, "Adding " + input.toString() + " to our list...",
+                                      Toast.LENGTH_LONG);
+                      toast.setGravity(Gravity.CENTER, Gravity.CENTER, 0);
+                      toast.show();
                   }
                 }
               })
@@ -154,7 +193,6 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
       GcmNetworkManager.getInstance(this).schedule(periodicTask);
     }
   }
-
 
   @Override
   public void onResume() {
@@ -196,9 +234,17 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
       // this is for changing stock changes from percent value to dollar value
       Utils.showPercent = !Utils.showPercent;
       this.getContentResolver().notifyChange(QuoteProvider.Quotes.CONTENT_URI, null);
+      updateWidgets();
     }
-
     return super.onOptionsItemSelected(item);
+  }
+
+  private void updateWidgets() {
+    Context context = this;
+    // Setting the package ensures that only components in our app will receive the broadcast
+    Intent dataUpdatedIntent = new Intent(ACTION_DATA_UPDATED)
+            .setPackage(context.getPackageName());
+    context.sendBroadcast(dataUpdatedIntent);
   }
 
   @Override
@@ -215,6 +261,8 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
   @Override
   public void onLoadFinished(Loader<Cursor> loader, Cursor data){
     mCursorAdapter.swapCursor(data);
+    mEmptyView.setVisibility(isConnected ? View.GONE : View.VISIBLE);
+    updateWidgets();
     mCursor = data;
   }
 
@@ -222,5 +270,4 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
   public void onLoaderReset(Loader<Cursor> loader){
     mCursorAdapter.swapCursor(null);
   }
-
 }

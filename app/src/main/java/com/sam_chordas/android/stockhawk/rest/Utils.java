@@ -2,12 +2,15 @@ package com.sam_chordas.android.stockhawk.rest;
 
 import android.content.ContentProviderOperation;
 import android.util.Log;
+
 import com.sam_chordas.android.stockhawk.data.QuoteColumns;
 import com.sam_chordas.android.stockhawk.data.QuoteProvider;
-import java.util.ArrayList;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
 
 /**
  * Created by sam_chordas on 10/8/15.
@@ -17,6 +20,13 @@ public class Utils {
   private static String LOG_TAG = Utils.class.getSimpleName();
 
   public static boolean showPercent = true;
+
+  public static boolean checkJsonDoesStockQuoteExist(JSONObject jsonObject) throws JSONException {
+      return (!jsonObject.getString("Change").equals("null") &&
+              !jsonObject.getString("symbol").equals("null") &&
+              !jsonObject.getString("Bid").equals("null") &&
+              !jsonObject.getString("ChangeinPercent").equals("null"));
+  }
 
   public static ArrayList quoteJsonToContentVals(String JSON){
     ArrayList<ContentProviderOperation> batchOperations = new ArrayList<>();
@@ -30,14 +40,22 @@ public class Utils {
         if (count == 1){
           jsonObject = jsonObject.getJSONObject("results")
               .getJSONObject("quote");
-          batchOperations.add(buildBatchOperation(jsonObject));
+          if (checkJsonDoesStockQuoteExist(jsonObject)) {
+            batchOperations.add(buildBatchOperation(jsonObject));
+          } else {
+              return null;
+          }
         } else{
           resultsArray = jsonObject.getJSONObject("results").getJSONArray("quote");
 
           if (resultsArray != null && resultsArray.length() != 0){
             for (int i = 0; i < resultsArray.length(); i++){
               jsonObject = resultsArray.getJSONObject(i);
-              batchOperations.add(buildBatchOperation(jsonObject));
+              if (checkJsonDoesStockQuoteExist(jsonObject)) {
+                batchOperations.add(buildBatchOperation(jsonObject));
+              } else {
+                  return null;
+              }
             }
           }
         }

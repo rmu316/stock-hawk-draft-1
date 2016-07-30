@@ -1,6 +1,9 @@
 package com.sam_chordas.android.stockhawk.rest;
 
 import android.content.Context;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.support.v7.widget.RecyclerView;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -33,6 +36,18 @@ public class RecyclerViewItemClickListener implements RecyclerView.OnItemTouchLi
 
   @Override public boolean onInterceptTouchEvent(RecyclerView view, MotionEvent e) {
     View childView = view.findChildViewUnder(e.getX(), e.getY());
+    Drawable background = view.getBackground();
+    int currentBackgroundColor = Color.TRANSPARENT;
+    if (background instanceof ColorDrawable) {
+      currentBackgroundColor = ((ColorDrawable) background).getColor();
+    }
+    if (childView != null) {
+      if (e.getAction() == MotionEvent.ACTION_DOWN) {
+        childView.setBackgroundColor(Color.GREEN);
+      } else if (e.getAction() == MotionEvent.ACTION_UP) {
+        childView.setBackgroundColor(currentBackgroundColor);
+      }
+    }
     if (childView != null && listener != null && gestureDetector.onTouchEvent(e)) {
       listener.onItemClick(childView, view.getChildPosition(childView));
       return true;

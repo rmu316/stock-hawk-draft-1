@@ -1,0 +1,35 @@
+{
+  "project_info": {
+    "project_number": "872560547504",
+    "project_id": "firebase-stock-hawk"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:872560547504:android:b1e533c2103d1bc9",
+        "android_client_info": {
+          "package_name": "com.sam_chordas.android.stockhawk.service"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD0yuheR24wrmxTGa-uwLKJ43MaLTTdMo8"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

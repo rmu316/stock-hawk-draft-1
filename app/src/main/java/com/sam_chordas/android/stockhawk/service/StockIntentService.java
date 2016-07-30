@@ -3,6 +3,8 @@ package com.sam_chordas.android.stockhawk.service;
 import android.app.IntentService;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Message;
+import android.os.Messenger;
 import android.util.Log;
 import android.view.Gravity;
 import android.widget.Toast;
@@ -41,7 +43,7 @@ public class StockIntentService extends IntentService {
     if (stockTaskService.onRunTask(new TaskParams(intent.getStringExtra("tag"), args)) != GcmNetworkManager.RESULT_SUCCESS) {
       mWasSuccess = false;
     } else {
-      //mDetailsJson = stockTaskService.getDetailsJson();
+      mDetailsJson = stockTaskService.getDetailsJson();
       mWasSuccess = true;
     }
   }
@@ -55,7 +57,7 @@ public class StockIntentService extends IntentService {
       toast.setGravity(Gravity.CENTER, Gravity.CENTER, 0);
       toast.show();
     }
-    /*if (mDetailsJson != null) {
+    if (mDetailsJson != null) {
       mDataToReturn = new Bundle();
       mDataToReturn.putString("historical", mDetailsJson);
       Messenger messenger=(Messenger)mExtras.get(EXTRA_MESSENGER);
@@ -67,6 +69,6 @@ public class StockIntentService extends IntentService {
       catch (android.os.RemoteException e1) {
         Log.w(getClass().getName(), "Exception sending message", e1);
       }
-    }*/
+    }
   }
 }

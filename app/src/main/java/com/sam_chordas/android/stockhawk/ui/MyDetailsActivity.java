@@ -19,11 +19,11 @@ public class MyDetailsActivity extends AppCompatActivity {
             // Create the detail fragment and add it to the activity
             // using a fragment transaction.
 
-            Bundle arguments = new Bundle();
-            arguments.putString("historical", getIntent().getStringExtra("historical"));
+            Bundle extras = getIntent().getExtras();
+            extras.putParcelableArrayList(MyStocksActivity.DATA_TAG, getIntent().getParcelableArrayListExtra(MyStocksActivity.DATA_TAG));
 
             MyDetailsFragment fragment = new MyDetailsFragment();
-            fragment.setArguments(arguments);
+            fragment.setArguments(extras);
 
             getSupportFragmentManager().beginTransaction()
                     .add(R.id.stock_detail_container, fragment)

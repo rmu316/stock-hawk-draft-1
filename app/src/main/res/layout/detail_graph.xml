@@ -1,0 +1,98 @@
+<android.support.v7.widget.GridLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:padding="@dimen/activity_horizontal_margin"
+    app:columnCount="2">
+
+    <TextView
+        android:id="@+id/stock_detail_symbol_label"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:text="@string/stock_detail_symbol_label"
+        android:textAppearance="@style/TextAppearance.AppCompat.Title"
+        android:textColor="@color/grey"
+        android:contentDescription="@string/a11y_stock_symbol"
+        app:layout_columnWeight="1"
+        app:layout_gravity="fill"
+        app:layout_rowWeight="1" />
+
+    <TextView
+        android:id="@+id/stock_detail_symbol"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:textAppearance="@style/TextAppearance.AppCompat.Headline"
+        android:textColor="@color/black"
+        app:layout_gravity="fill|end"
+        tools:text="FB"
+        app:layout_columnWeight="1"
+        app:layout_rowWeight="1"/>
+
+    <TextView
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:id="@+id/stock_detail_first_label"
+        android:textAppearance="@style/TextAppearance.AppCompat.Title"
+        android:textColor="@color/grey"
+        app:layout_columnWeight="1"
+        app:layout_gravity="fill"
+        app:layout_rowWeight="1" />
+
+    <TextView
+        android:id="@+id/stock_detail_first"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:textAppearance="@style/TextAppearance.AppCompat.Headline"
+        android:textColor="@color/black"
+        app:layout_gravity="fill"
+        tools:text="29/6/2016"
+        app:layout_columnWeight="1"
+        app:layout_rowWeight="1"/>
+
+    <TextView
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:id="@+id/stock_detail_last_label"
+        android:textAppearance="@style/TextAppearance.AppCompat.Title"
+        android:textColor="@color/grey"
+        app:layout_columnWeight="1"
+        app:layout_gravity="fill"
+        app:layout_rowWeight="1" />
+
+    <TextView
+        android:id="@+id/stock_detail_last"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:textAppearance="@style/TextAppearance.AppCompat.Headline"
+        android:textColor="@color/black"
+        app:layout_gravity="fill"
+        tools:text="29/6/2016"
+        app:layout_columnWeight="1"
+        app:layout_rowWeight="1"/>
+
+    <TextView
+        android:id="@+id/stock_detail_volume_label"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:text="@string/stock_detail_volume_label"
+        android:textAppearance="@style/TextAppearance.AppCompat.Title"
+        android:textColor="@color/grey"
+        app:layout_columnWeight="1"
+        app:layout_gravity="fill"
+        app:layout_rowWeight="1" />
+
+    <TextView
+        android:id="@+id/stock_detail_volume"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:textAppearance="@style/TextAppearance.AppCompat.Headline"
+        android:textColor="@color/black"
+        app:layout_gravity="fill"
+        tools:text="214.06"
+        app:layout_columnWeight="1"
+        app:layout_rowWeight="1"/>
+
+</android.support.v7.widget.GridLayout>

@@ -14,7 +14,7 @@
       android:id="@+id/fab"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
-      android:layout_gravity="bottom|right"
+      android:layout_gravity="bottom|end"
       android:layout_margin="16dp"
       android:src="@drawable/ic_add_white_24dp"
       fab:fab_colorNormal="@color/material_blue_500"
@@ -39,6 +39,5 @@
         android:paddingLeft="@dimen/activity_horizontal_margin"
         android:paddingRight="@dimen/activity_horizontal_margin"
         android:paddingStart="@dimen/activity_horizontal_margin"
-        android:paddingTop="@dimen/activity_vertical_margin"
-        android:text="@string/network_down" />
+        android:paddingTop="@dimen/activity_vertical_margin" />
 </FrameLayout>

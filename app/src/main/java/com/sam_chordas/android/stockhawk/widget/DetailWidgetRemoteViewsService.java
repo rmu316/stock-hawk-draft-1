@@ -83,24 +83,34 @@ public class DetailWidgetRemoteViewsService extends RemoteViewsService {
                 }
                 RemoteViews views = new RemoteViews(getPackageName(),
                         R.layout.list_item_quote);
-                views.setTextViewText(R.id.stock_symbol, data.getString(INDEX_STOCK_SYMBOL));
-                views.setTextViewText(R.id.bid_price, data.getString(INDEX_STOCK_BIDPRICE));
+                String stock_symbol = data.getString(INDEX_STOCK_SYMBOL);
+                String stock_price = data.getString(INDEX_STOCK_BIDPRICE);
+                String stock_change = data.getString(INDEX_STOCK_CHANGE);
+                String stock_change_percent = data.getString(INDEX_STOCK_PERCENT_CHANGE);
+                String description;
+                views.setTextViewText(R.id.stock_symbol, stock_symbol);
+                views.setTextViewText(R.id.bid_price, stock_price);
                 if (data.getInt(INDEX_STOCK_ISUP) == 1) {
                     views.setInt(R.id.change, "setBackgroundColor", Color.GREEN);
                 } else {
                     views.setInt(R.id.change, "setBackgroundColor", Color.RED);
                 }
                 if (Utils.showPercent) {
-                    views.setTextViewText(R.id.change, data.getString(INDEX_STOCK_PERCENT_CHANGE));
+                    views.setTextViewText(R.id.change, stock_change_percent);
+                    description = getString(R.string.a11y_stock_summary, stock_symbol, stock_price, stock_change_percent);
                 } else {
-                    views.setTextViewText(R.id.change, data.getString(INDEX_STOCK_CHANGE));
+                    views.setTextViewText(R.id.change, stock_change);
+                    description = getString(R.string.a11y_stock_summary, stock_symbol, stock_price, stock_change);
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1) {
+                    setRemoteContentDescription(views, description);
                 }
                 return views;
             }
 
             @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1)
             private void setRemoteContentDescription(RemoteViews views, String description) {
-                //views.setContentDescription(R.id.widget_icon, description);
+                views.setContentDescription(R.id.stock_list_item, description);
             }
 
             @Override

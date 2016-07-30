@@ -9,12 +9,17 @@ import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
+import android.os.Messenger;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.text.InputType;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -28,6 +33,7 @@ import com.google.android.gms.gcm.PeriodicTask;
 import com.google.android.gms.gcm.Task;
 import com.melnykov.fab.FloatingActionButton;
 import com.sam_chordas.android.stockhawk.R;
+import com.sam_chordas.android.stockhawk.StockHistoData;
 import com.sam_chordas.android.stockhawk.data.QuoteColumns;
 import com.sam_chordas.android.stockhawk.data.QuoteProvider;
 import com.sam_chordas.android.stockhawk.rest.QuoteCursorAdapter;
@@ -36,6 +42,12 @@ import com.sam_chordas.android.stockhawk.rest.Utils;
 import com.sam_chordas.android.stockhawk.service.StockIntentService;
 import com.sam_chordas.android.stockhawk.service.StockTaskService;
 import com.sam_chordas.android.stockhawk.touch_helper.SimpleItemTouchHelperCallback;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
 
 public class MyStocksActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>{
 
@@ -46,6 +58,8 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
   /**
    * Used to store the last screen title. For use in {@link #restoreActionBar()}.
    */
+  private static final String LOG_TAG = MyStocksActivity.class.getSimpleName();
+    public static final String DATA_TAG = "historical_data";
   private CharSequence mTitle;
   private Intent mServiceIntent;
   private ItemTouchHelper mItemTouchHelper;
@@ -54,7 +68,8 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
   private Context mContext;
   private Cursor mCursor;
   private TextView mEmptyView;
-    //private Handler mHandler;
+    private RecyclerView mRecyclerView;
+    private Handler mHandler;
   boolean isConnected;
   public static final String ACTION_DATA_UPDATED =
           "com.sam_chordas.android.stockhawk.ACTION_DATA_UPDATED";
@@ -73,16 +88,12 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
     // The intent service is for executing immediate pulls from the Yahoo API
     // GCMTaskService can only schedule tasks, they cannot execute immediately
     mServiceIntent = new Intent(this, StockIntentService.class);
-      /*mHandler = new Handler(Looper.getMainLooper()) {
+      mHandler = new Handler(Looper.getMainLooper()) {
               @Override
               public void handleMessage(Message msg) {
-                  Log.v("DEBUG", "json string is " + msg.getData().getString("historical"));
-                  Intent intent = new Intent(getBaseContext(), MyDetailsActivity.class);
-                  Bundle args = new Bundle();
-                  args.putString("historical", msg.getData().getString("historical"));
-                  startActivity(intent, args);
+                  decompressAndDisplay(msg.getData().getString("historical"));
               }
-      };*/
+      };
     if (savedInstanceState == null){
       // Run the initialize task service so that some stocks appear upon an empty database
       mServiceIntent.putExtra("tag", "init");
@@ -92,39 +103,39 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
         networkToast();
       }
     }
-    final RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
-    recyclerView.setLayoutManager(new LinearLayoutManager(this));
+    mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+    mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
     getLoaderManager().initLoader(CURSOR_LOADER_ID, null, this);
 
-    mEmptyView = (TextView) findViewById(R.id.recyclerview_empty);
-
     mCursorAdapter = new QuoteCursorAdapter(this, null);
-    recyclerView.addOnItemTouchListener(new RecyclerViewItemClickListener(this,
+    mRecyclerView.addOnItemTouchListener(new RecyclerViewItemClickListener(this,
             new RecyclerViewItemClickListener.OnItemClickListener() {
-              @Override public void onItemClick(View v, int position) {
-                //TODO:
-                // do something on item click
-                  mCursor.moveToPosition(position);
-                  String symbol = mCursor.getString(mCursor.getColumnIndex(QuoteColumns.SYMBOL));
-                  // Add the stock to DB
-                  mServiceIntent.putExtra("tag", "get");
-                  mServiceIntent.putExtra("symbol", symbol);
-                  //mServiceIntent.putExtra(StockIntentService.EXTRA_MESSENGER, new Messenger(mHandler));
-                  startService(mServiceIntent);
-                  // Let user know we are in the process of retrieving this stock's
-                  // specific details since this might take some time
-                  Toast toast =
-                          Toast.makeText(MyStocksActivity.this, "Retrieving details for " + symbol + "...",
-                                  Toast.LENGTH_LONG);
-                  toast.setGravity(Gravity.CENTER, Gravity.CENTER, 0);
-                  toast.show();
-              }
+                @Override
+                public void onItemClick(View v, int position) {
+                    if (isConnected) {
+                        mCursor.moveToPosition(position);
+                        String symbol = mCursor.getString(mCursor.getColumnIndex(QuoteColumns.SYMBOL));
+                        // Add the stock to DB
+                        mServiceIntent.putExtra("tag", "get");
+                        mServiceIntent.putExtra("symbol", symbol);
+                        mServiceIntent.putExtra(StockIntentService.EXTRA_MESSENGER, new Messenger(mHandler));
+                        startService(mServiceIntent);
+                        // Let user know we are in the process of retrieving this stock's
+                        // specific details since this might take some time
+                        Toast toast =
+                                Toast.makeText(MyStocksActivity.this, "Retrieving details for " + symbol + "...",
+                                        Toast.LENGTH_LONG);
+                        toast.setGravity(Gravity.CENTER, Gravity.CENTER, 0);
+                        toast.show();
+                    } else {
+                        networkToast();
+                    }
+                }
             }));
-    recyclerView.setAdapter(mCursorAdapter);
-
+    mRecyclerView.setAdapter(mCursorAdapter);
 
     FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-    fab.attachToRecyclerView(recyclerView);
+    fab.attachToRecyclerView(mRecyclerView);
     fab.setOnClickListener(new View.OnClickListener() {
       @Override public void onClick(View v) {
         if (isConnected){
@@ -146,17 +157,22 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
                     toast.show();
                     return;
                   } else {
-                    // Add the stock to DB
-                    mServiceIntent.putExtra("tag", "add");
-                    mServiceIntent.putExtra("symbol", input.toString());
-                    startService(mServiceIntent);
-                      // Let user know we are in the process of adding the stock
-                      // since this might take some time
-                      Toast toast =
-                              Toast.makeText(MyStocksActivity.this, "Adding " + input.toString() + " to our list...",
-                                      Toast.LENGTH_LONG);
-                      toast.setGravity(Gravity.CENTER, Gravity.CENTER, 0);
-                      toast.show();
+                    // First check if user inputted anything
+                      // If nothing, just exit out w/o wasting
+                      // time querying anything
+                      if (!input.toString().isEmpty()) {
+                          // Add the stock to DB
+                          mServiceIntent.putExtra("tag", "add");
+                          mServiceIntent.putExtra("symbol", input.toString());
+                          startService(mServiceIntent);
+                          // Let user know we are in the process of adding the stock
+                          // since this might take some time
+                          Toast toast =
+                                  Toast.makeText(MyStocksActivity.this, "Adding " + input.toString() + " to our list...",
+                                          Toast.LENGTH_LONG);
+                          toast.setGravity(Gravity.CENTER, Gravity.CENTER, 0);
+                          toast.show();
+                      }
                   }
                 }
               })
@@ -170,7 +186,7 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
 
     ItemTouchHelper.Callback callback = new SimpleItemTouchHelperCallback(mCursorAdapter);
     mItemTouchHelper = new ItemTouchHelper(callback);
-    mItemTouchHelper.attachToRecyclerView(recyclerView);
+    mItemTouchHelper.attachToRecyclerView(mRecyclerView);
 
     mTitle = getTitle();
     if (isConnected){
@@ -194,9 +210,48 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
     }
   }
 
+    public void decompressAndDisplay(String json) {
+        JSONObject jsonObject = null;
+        JSONArray resultsArray = null;
+        ArrayList<StockHistoData> listOfResults = new ArrayList<>();
+
+        try {
+            jsonObject = new JSONObject(json);
+            if (jsonObject != null && jsonObject.length() != 0){
+                jsonObject = jsonObject.getJSONObject("query");
+                if (jsonObject != null && jsonObject.length() != 0){
+                    resultsArray = jsonObject.getJSONObject("results").getJSONArray("quote");
+                    if (resultsArray != null && resultsArray.length() != 0){
+                        for (int i = 0; i < resultsArray.length(); i++){
+                            jsonObject = resultsArray.getJSONObject(i);
+                            listOfResults.add(new StockHistoData(jsonObject.getString("Symbol"),
+                                                                 Utils.formatDateString(jsonObject.getString("Date")),
+                                                                 jsonObject.getString("Open"),
+                                                                 jsonObject.getString("High"),
+                                                                 jsonObject.getString("Low"),
+                                                                 jsonObject.getString("Close"),
+                                                                 jsonObject.getString("Volume"),
+                                                                 jsonObject.getString("Adj_Close")));
+                        }
+                    }
+                }
+            }
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "String to JSON failed: " + e);
+        }
+        Intent intent = new Intent(this, MyDetailsActivity.class).putExtra(DATA_TAG, listOfResults);
+        startActivity(intent);
+    }
+
   @Override
   public void onResume() {
     super.onResume();
+      // Recheck for network in case it changed
+      ConnectivityManager cm =
+              (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+      NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+      isConnected = activeNetwork != null &&
+              activeNetwork.isConnectedOrConnecting();
     getLoaderManager().restartLoader(CURSOR_LOADER_ID, null, this);
   }
 
@@ -261,10 +316,29 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
   @Override
   public void onLoadFinished(Loader<Cursor> loader, Cursor data){
     mCursorAdapter.swapCursor(data);
-    mEmptyView.setVisibility(isConnected ? View.GONE : View.VISIBLE);
+      updateEmptyView();
     updateWidgets();
     mCursor = data;
   }
+
+    private void updateEmptyView() {
+        mEmptyView = (TextView) findViewById(R.id.recyclerview_empty);
+        if (mCursorAdapter.getItemCount() == 0 ||
+                !isConnected) {
+            if (mEmptyView != null) {
+                int message = R.string.no_items;
+                if (!isConnected) {
+                    message = R.string.network_down;
+                }
+                mEmptyView.setText(message);
+                mEmptyView.setVisibility(View.VISIBLE);
+                mRecyclerView.setVisibility(View.GONE);
+            }
+        } else {
+            mEmptyView.setVisibility(View.GONE);
+            mRecyclerView.setVisibility(View.VISIBLE);
+        }
+    }
 
   @Override
   public void onLoaderReset(Loader<Cursor> loader){

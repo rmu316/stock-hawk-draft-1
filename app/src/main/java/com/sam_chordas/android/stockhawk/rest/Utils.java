@@ -10,7 +10,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 /**
  * Created by sam_chordas on 10/8/15.
@@ -20,6 +24,20 @@ public class Utils {
   private static String LOG_TAG = Utils.class.getSimpleName();
 
   public static boolean showPercent = true;
+
+    public static String formatDateString(String original) {
+        DateFormat toFormat = new SimpleDateFormat("MM/dd/yyyy");
+        DateFormat fromFormat = new SimpleDateFormat("yyyy-MM-dd");
+        toFormat.setLenient(false);
+        fromFormat.setLenient(false);
+        try {
+            Date date = fromFormat.parse(original);
+            return toFormat.format(date);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
   public static boolean checkJsonDoesStockQuoteExist(JSONObject jsonObject) throws JSONException {
       return (!jsonObject.getString("Change").equals("null") &&

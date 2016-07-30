@@ -10,6 +10,23 @@
   <string name="input_hint">FB</string>
   <string name="input_prefill"></string>
   <string name="network_toast">Uh-oh! This app requires an internet connection</string>
-  <string name="network_down">No Network Connection, cannot display stock prices</string>
   <string name="title_widget_stock">Stock Details</string>
+
+  <string name="stock_detail_symbol_label">Symbol</string>
+  <string name="stock_detail_volume_label">Volume</string>
+
+  <string name="a11y_symbol">Symbol: %1$s</string>
+  <string name="a11y_bidprice">Bid Price: %1$s dollars</string>
+  <string name="a11y_percent_change">Change: %1$s</string>
+  <string name="a11y_change">Change: %1$s dollars</string>
+  <string name="a11y_stock_symbol">Symbol is %1$s</string>
+  <string name="a11y_price_start">Starting price of stock on %1$s is %2$s dollars</string>
+  <string name="a11y_price_end">Ending price of stock on %1$s is %2$s dollars</string>
+  <string name="a11y_volume">Volume of stock is %1$s</string>
+  <string name="a11y_stock_summary">Stock is %1$s, bid price is %2$s, change is %3$s</string>
+
+  <!-- Error messages -->
+  <string name="no_items">No stocks to display, add some by clicking the + button at the bottom</string>
+  <string name="network_down">No Network Connection, cannot display stock prices</string>
+  <string name="widget_no_items">No stocks to display, add some in app or check network connectivity</string>
 </resources>

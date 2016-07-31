@@ -73,6 +73,7 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
   boolean isConnected;
   public static final String ACTION_DATA_UPDATED =
           "com.sam_chordas.android.stockhawk.ACTION_DATA_UPDATED";
+    private static final String DETAILS_TAG = "historical";
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -91,7 +92,7 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
       mHandler = new Handler(Looper.getMainLooper()) {
               @Override
               public void handleMessage(Message msg) {
-                  decompressAndDisplay(msg.getData().getString("historical"));
+                  decompressAndDisplay(msg.getData().getString(DETAILS_TAG));
               }
       };
     if (savedInstanceState == null){
@@ -122,8 +123,9 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
                         startService(mServiceIntent);
                         // Let user know we are in the process of retrieving this stock's
                         // specific details since this might take some time
+                        String progressStr = getString(R.string.progress_str, symbol);
                         Toast toast =
-                                Toast.makeText(MyStocksActivity.this, "Retrieving details for " + symbol + "...",
+                                Toast.makeText(MyStocksActivity.this, progressStr,
                                         Toast.LENGTH_LONG);
                         toast.setGravity(Gravity.CENTER, Gravity.CENTER, 0);
                         toast.show();
@@ -135,6 +137,7 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
     mRecyclerView.setAdapter(mCursorAdapter);
 
     FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+      fab.setContentDescription(getString(R.string.a11y_add_button));
     fab.attachToRecyclerView(mRecyclerView);
     fab.setOnClickListener(new View.OnClickListener() {
       @Override public void onClick(View v) {
@@ -151,7 +154,7 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
                       new String[] { input.toString() }, null);
                   if (c.getCount() != 0) {
                     Toast toast =
-                        Toast.makeText(MyStocksActivity.this, "This stock is already saved!",
+                        Toast.makeText(MyStocksActivity.this, getString(R.string.already_saved),
                             Toast.LENGTH_LONG);
                     toast.setGravity(Gravity.CENTER, Gravity.CENTER, 0);
                     toast.show();
@@ -167,8 +170,9 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
                           startService(mServiceIntent);
                           // Let user know we are in the process of adding the stock
                           // since this might take some time
+                          String addStr = getString(R.string.adding_str, input.toString());
                           Toast toast =
-                                  Toast.makeText(MyStocksActivity.this, "Adding " + input.toString() + " to our list...",
+                                  Toast.makeText(MyStocksActivity.this, addStr,
                                           Toast.LENGTH_LONG);
                           toast.setGravity(Gravity.CENTER, Gravity.CENTER, 0);
                           toast.show();
@@ -214,24 +218,35 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
         JSONObject jsonObject = null;
         JSONArray resultsArray = null;
         ArrayList<StockHistoData> listOfResults = new ArrayList<>();
+        final String QUERY_TAG = "query";
+        final String RESULTS_TAG = "results";
+        final String QUOTE_TAG = "quote";
+        final String SYMBOL_TAG = "Symbol";
+        final String DATE_TAG = "Date";
+        final String OPEN_TAG = "Open";
+        final String HIGH_TAG = "High";
+        final String LOW_TAG = "Low";
+        final String CLOSE_TAG = "Close";
+        final String VOL_TAG = "Volume";
+        final String ADJ_TAG = "Adj_Close";
 
         try {
             jsonObject = new JSONObject(json);
             if (jsonObject != null && jsonObject.length() != 0){
-                jsonObject = jsonObject.getJSONObject("query");
+                jsonObject = jsonObject.getJSONObject(QUERY_TAG);
                 if (jsonObject != null && jsonObject.length() != 0){
-                    resultsArray = jsonObject.getJSONObject("results").getJSONArray("quote");
+                    resultsArray = jsonObject.getJSONObject(RESULTS_TAG).getJSONArray(QUOTE_TAG);
                     if (resultsArray != null && resultsArray.length() != 0){
                         for (int i = 0; i < resultsArray.length(); i++){
                             jsonObject = resultsArray.getJSONObject(i);
-                            listOfResults.add(new StockHistoData(jsonObject.getString("Symbol"),
-                                                                 Utils.formatDateString(jsonObject.getString("Date")),
-                                                                 jsonObject.getString("Open"),
-                                                                 jsonObject.getString("High"),
-                                                                 jsonObject.getString("Low"),
-                                                                 jsonObject.getString("Close"),
-                                                                 jsonObject.getString("Volume"),
-                                                                 jsonObject.getString("Adj_Close")));
+                            listOfResults.add(new StockHistoData(jsonObject.getString(SYMBOL_TAG),
+                                                                 Utils.formatDateString(jsonObject.getString(DATE_TAG)),
+                                                                 jsonObject.getString(OPEN_TAG),
+                                                                 jsonObject.getString(HIGH_TAG),
+                                                                 jsonObject.getString(LOW_TAG),
+                                                                 jsonObject.getString(CLOSE_TAG),
+                                                                 jsonObject.getString(VOL_TAG),
+                                                                 jsonObject.getString(ADJ_TAG)));
                         }
                     }
                 }

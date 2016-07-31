@@ -9,6 +9,9 @@
   <string name="content_test">Search for a Stock Symbol</string>
   <string name="input_hint">FB</string>
   <string name="input_prefill"></string>
+  <string name="already_saved">This stock is already saved!</string>
+  <string name="progress_str">Retrieving details for %1$s&#8230;</string>
+  <string name="adding_str">Adding %1$s to our list&#8230;</string>
   <string name="network_toast">Uh-oh! This app requires an internet connection</string>
   <string name="title_widget_stock">Stock Details</string>
 
@@ -24,6 +27,7 @@
   <string name="a11y_price_end">Ending price of stock on %1$s is %2$s dollars</string>
   <string name="a11y_volume">Volume of stock is %1$s</string>
   <string name="a11y_stock_summary">Stock is %1$s, bid price is %2$s, change is %3$s</string>
+  <string name="a11y_add_button">Add stocks button, click here to add more!</string>
 
   <!-- Error messages -->
   <string name="no_items">No stocks to display, add some by clicking the + button at the bottom</string>
